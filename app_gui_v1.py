@@ -1,4 +1,5 @@
 import ezdxf
+from matplotlib import patches
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import mplcursors
@@ -10,14 +11,15 @@ class DXFVisualizer:
     def __init__(self, frame_content_visor):
         self.frame_content_visor = frame_content_visor
         self.current_canvas = None
+        self.ax = None
+        self.figure = None
+        self.entities_bbox = None
 
     def plot_line(self, ax, start, end):
-        x_vals = [start[0], end[0]]
-        y_vals = [start[1], end[1]]
-        ax.plot(x_vals, y_vals, color='k')
+        ax.plot([start[0], end[0]], [start[1], end[1]], color='k')
 
     def plot_circle(self, ax, center, radius):
-        circle = plt.Circle((center[0], center[1]), radius, fill=False, color='k')
+        circle = plt.Circle(center, radius, fill=False, color='k')
         ax.add_artist(circle)
 
     def translate_entities(self, entities):
@@ -76,34 +78,20 @@ class DXFVisualizer:
         self.current_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
     def apply_zoom(self, zoom_percent):
-        if not self.ax or not self.entities_bbox:
-            return
-
-        min_x, max_x, min_y, max_y = self.entities_bbox
-        width = max_x - min_x
-        height = max_y - min_y
-        factor = 100 / zoom_percent
-
-        center_x = (max_x + min_x) / 2
-        center_y = (max_y + min_y) / 2
-
-        self.ax.set_xlim(center_x - (width / 2) * factor, center_x + (width / 2) * factor)
-        self.ax.set_ylim(center_y - (height / 2) * factor, center_y + (height / 2) * factor)
-        self.current_canvas.draw()
+        pass
 
 
 class CrearGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Plantilla de Visualización corte")
-        self.root.geometry("600x400")
+        self.root.geometry("800x600")
         self.root.configure(bg="white")
         self.visualizador = None
 
     def crear_header(self):
-        header = tk.Label(self.root, text="Corte sagital", bg="lightblue", fg="white",
-                          font=("Arial", 16), height=2)
-        header.pack(side="top", fill="x")
+        tk.Label(self.root, text="Corte sagital", bg="lightblue", fg="white",
+                 font=("Arial", 16), height=2).pack(side="top", fill="x")
 
     def crear_main_frame(self):
         self.main_frame = tk.Frame(self.root, bg="white")
@@ -113,13 +101,16 @@ class CrearGUI:
         nav_frame = tk.Frame(self.main_frame, width=120, bg="#f0f0f0")
         nav_frame.pack(side="left", fill="y")
 
-        open_button = tk.Button(nav_frame, text="Abrir archivo DXF", fg="blue", anchor="w",
-                                command=self.open_file)
-        open_button.pack(fill="x", padx=10, pady=5)
+        tk.Button(nav_frame, text="Abrir archivo DXF", fg="blue", anchor="w",
+                  command=self.open_file).pack(fill="x", padx=10, pady=5)
 
-        close_button = tk.Button(nav_frame, text="Cerrar", fg="blue", anchor="w",
-                                 command=self.root.quit)
-        close_button.pack(fill="x", padx=10, pady=5)
+        tk.Button(nav_frame, text="Cerrar", fg="blue", anchor="w",
+                  command=self.root.quit).pack(fill="x", padx=10, pady=5)
+
+        zoom_scale = tk.Scale(nav_frame, from_=50, to=200, orient='horizontal',
+                              label="Zoom (%)", command=self.aplicar_zoom)
+        zoom_scale.set(100)
+        zoom_scale.pack(fill="x", pady=(10, 0))
 
     def crear_visor(self):
         self.frame_content_visor = tk.Frame(self.main_frame, bg="white")
@@ -129,16 +120,22 @@ class CrearGUI:
         tk.Label(self.frame_content_visor, text="Plantilla del corte sagital",
                  font=("Arial", 12)).pack(anchor="w", pady=(5, 0))
 
-        self.visualizador = DXFVisualizer(self.frame_content_visor)
+        self.canvas_frame = tk.Frame(self.frame_content_visor, bg="white")
+        self.canvas_frame.pack(fill="both", expand=True)
+
+        self.visualizador = DXFVisualizer(self.canvas_frame)
 
     def crear_footer(self):
-        footer = tk.Label(self.root, text="Salinas Henry", bg="lightblue", fg="white", height=2)
-        footer.pack(side="bottom", fill="x")
+        tk.Label(self.root, text="Salinas Henry", bg="lightblue", fg="white", height=2).pack(side="bottom", fill="x")
 
     def open_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("DXF Files", "*.dxf")])
-        if file_path and self.visualizador:
+        if file_path:
             self.visualizador.draw(file_path)
+
+    def aplicar_zoom(self, valor):
+        if self.visualizador:
+            self.visualizador.apply_zoom(int(valor))
 
     def show(self):
         self.crear_header()

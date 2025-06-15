@@ -13,8 +13,8 @@ diametro_base = 87  # 8.7cm
 diametro_injerto = 52  # 5.2cm
 numero_divisiones = 120
 #  Margen para la plantilla
-x_margen = 30
-y_margen = 275
+x_margen = 0
+y_margen = 0
 nombre_archivo_dxf = "outFiles/plantilla_corte_boca_pez.dxf"
 # Parámetros por defecto para la conversión a imagen
 default_img_res = 300
@@ -67,22 +67,22 @@ def generar_dxf_con_puntos(x_values, y_values, puntos):
     doc.units = ezdxf.units.MM  # Establecer unidad en milímetros
     msp = doc.modelspace()
     auditor = doc.audit()
-    for x, y in zip(x_values, y_values):
-        msp.add_point((x, y))
 
     # Calcular límites verticales
     y_max = max(y_values)
     y_base = min(y_values)
+
     y_range = y_max - y_base
     y_min = y_base - y_range  # Extiende el margen inferior
     y_dim_line = y_base - y_range / 2  # Línea de cota
 
-    print(f"y_min: {y_base}")
-    print(f"y_max: {y_max}")
-
     # Coordenadas horizontales
     x_start, x_end = x_values[0], x_values[-1]
     y_start, y_end = y_values[0], y_values[-1]
+    # Espieza a dibujar
+    for x, y in zip(x_values, y_values):
+        msp.add_point((x, y))
+        msp.add_line((x, y_base), (x, y))
 
     # Dibuja marco superior
     msp.add_line((x_start, y_max), (x_end, y_max))  # horizontal superior
