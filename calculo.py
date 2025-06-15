@@ -103,13 +103,41 @@ def generar_dxf_con_puntos(x_values, y_values, puntos):
         text="<> mm",
         override={"dimcolor": 40, "dimtxt": 1.0, "dimjust": 0}  # opcional: personaliza estilo
     )
-    # Agrega una cota lineal vertial total
-
-    # Agrega una cota lineal vertial superior
-
-    # Agrega una cota lineal vertial inferior
-
     dim.render()  # ¡Importante! Esto genera la geometría visible
+    # Agrega una cota lineal vertial total
+    dim = msp.add_linear_dim(
+        base=(x_start + y_range*3, 0),
+        p1=(x_start, y_max),
+        p2=(x_start, y_min),
+        angle=-90,
+        text="<> mm",
+        override={"dimjust": 4}
+    )
+    dim.set_arrows(blk=ezdxf.ARROWS.closed_filled, size=1.5)
+    dim.render()
+    # Agrega una cota lineal vertial superior
+    dim = msp.add_linear_dim(
+        base=(x_start + y_range*1, 0),
+        p1=(x_start, y_start),
+        p2=(x_start, y_max),
+        angle=90,
+        text="<> mm"
+
+    )
+    dim.set_arrows(blk=ezdxf.ARROWS.closed_filled, size=1.5)
+    dim.render()
+    # Agrega una cota lineal vertial inferior
+    dim = msp.add_linear_dim(
+        base=(x_start + y_range*2, 0),
+        p1=(x_start, y_start),
+        p2=(x_start, y_min),
+        angle=-90,
+        text="<> mm",
+        override={"dimjust": 4}
+
+    )
+    dim.set_arrows(blk=ezdxf.ARROWS.closed_filled, size=1.5)
+    dim.render()
 
     # Crear una polilínea con los puntos
     msp.add_lwpolyline(puntos, dxfattribs={"closed": False})
