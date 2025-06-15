@@ -18,7 +18,7 @@ y_margen = 275
 nombre_archivo_dxf = "outFiles/plantilla_corte_boca_pez.dxf"
 # Parámetros por defecto para la conversión a imagen
 default_img_res = 300
-default_bg_color = "#2B8A13"  # White
+default_bg_color = "#2DAB33"  # White
 default_img_name = "outFiles/plantilla_corte_boca_pez"
 default_img_format = '.png'
 
@@ -33,6 +33,7 @@ def coordenadas_corte_sagital():
     perimetro_plantilla = diametro_injerto * math.pi
     segmento_plantilla = perimetro_plantilla / numero_divisiones
     angulo_division = 360 / numero_divisiones
+    print(f"Perímetro plantilla: {perimetro_plantilla} mm")
 
     # Calcular puntos
     lista_puntos = []
@@ -69,39 +70,38 @@ def generar_dxf_con_puntos(x_values, y_values, puntos):
     for x, y in zip(x_values, y_values):
         msp.add_point((x, y))
 
+    # Calcular límites verticales
     y_max = max(y_values)
-    print(f"y_max: {y_max}")
     y_base = min(y_values)
-    y_slice = (y_max - y_base)
-    y_min = y_base - (y_slice)  # 10% debajo del mínimo
-    print(f"y_min: {y_base}")
-    # Dibuja los margenes de la  plantilla
-    # linea horizontal superior plantilla
-    msp.add_line((x_values[0], y_max), (x_values[-1], y_max))
-    # linea horizontal inferior plantilla
-    msp.add_line((x_values[0], y_values[0]), (x_values[-1], y_values[-1]))
-    # linea vertical  superior izquierda
-    msp.add_line((x_values[0], y_values[0]), (x_values[0], y_max))
-    # linea vertical  superior derecha
-    msp.add_line((x_values[-1], y_values[-1]), (x_values[-1], y_max))
-    # ---------------------------------
-    # Dibuja los margenes de la plantilla la parte inferior
-    # linea horizontal inferior plantilla
-    msp.add_line((x_values[0], y_min), (x_values[-1], y_min))
+    y_range = y_max - y_base
+    y_min = y_base - y_range  # Extiende el margen inferior
+    y_dim_line = y_base - y_range / 2  # Línea de cota
 
-    # linea vertical  inferior izquierda
-    msp.add_line((x_values[0], y_values[0]), (x_values[0], y_min))
-    # linea vertical  inferior derecha
-    msp.add_line((x_values[-1], y_values[-1]), (x_values[-1], y_min),
-                 dxfattribs={"linetype": "DASHED"})
+    print(f"y_min: {y_base}")
+    print(f"y_max: {y_max}")
+
+    # Coordenadas horizontales
+    x_start, x_end = x_values[0], x_values[-1]
+    y_start, y_end = y_values[0], y_values[-1]
+
+    # Dibuja marco superior
+    msp.add_line((x_start, y_max), (x_end, y_max))  # horizontal superior
+    msp.add_line((x_start, y_start), (x_end, y_end))  # horizontal inferior
+    msp.add_line((x_start, y_start), (x_start, y_max))  # vertical izquierda
+    msp.add_line((x_end, y_end), (x_end, y_max))  # vertical derecha
+
+    # Dibuja marco inferior
+    msp.add_line((x_start, y_min), (x_end, y_min))  # horizontal inferior
+    msp.add_line((x_start, y_start), (x_start, y_min))  # vertical izquierda
+    msp.add_line((x_end, y_end), (x_end, y_min), dxfattribs={"linetype": "DASHED"})  # vertical derecha entrecortada
 
     # Agrega una cota lineal horizontal
     dim = msp.add_linear_dim(
-        base=(0, y_base-(y_slice/2)),  # posición de la línea de cota
-        p1=(x_values[0], y_min),     # punto inicial
-        p2=(x_values[-1], y_min),   # punto final
+        base=(0, y_dim_line),  # posición de la línea de cota
+        p1=(x_start, y_min),
+        p2=(x_end, y_min),
         text="<> mm",
-        override={"dimexe": 1.0, "dimtxt": 2.0, "dimcolor": 40},  # opcional: personaliza estilo
+        override={"dimexe": 1.0, "dimtxt": 2.0, "dimcolor": 40}  # opcional: personaliza estilo
     )
 
     dim.render()  # ¡Importante! Esto genera la geometría visible
