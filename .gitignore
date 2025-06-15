@@ -1,0 +1,10 @@
+# Ignore node_modules directory
+**/DXF2img
+**/Easy-DXF-Viewer
+**/outFiles
+**/outFiles/.*
+**/build
+**/tmp
+**/temp
+**/bower_components
+**.log
