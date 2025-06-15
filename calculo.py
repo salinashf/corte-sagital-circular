@@ -101,8 +101,13 @@ def generar_dxf_con_puntos(x_values, y_values, puntos):
         p1=(x_start, y_min),
         p2=(x_end, y_min),
         text="<> mm",
-        override={"dimexe": 1.0, "dimtxt": 2.0, "dimcolor": 40}  # opcional: personaliza estilo
+        override={"dimcolor": 40, "dimtxt": 1.0, "dimjust": 0}  # opcional: personaliza estilo
     )
+    # Agrega una cota lineal vertial total
+
+    # Agrega una cota lineal vertial superior
+
+    # Agrega una cota lineal vertial inferior
 
     dim.render()  # ¡Importante! Esto genera la geometría visible
 
@@ -117,7 +122,6 @@ def generar_dxf_con_puntos(x_values, y_values, puntos):
     ctx = RenderContext(doc)
     ctx.set_current_layout(msp)
     ezdxf.addons.drawing.properties.MODEL_SPACE_BG_COLOR = default_bg_color
-    # ctx.current_layout.set_colors(bg="#E432B4")
     out = MatplotlibBackend(ax)
     Frontend(ctx, out).draw_layout(msp, finalize=True)
     first_param = f"{default_img_name}{default_img_format}"
