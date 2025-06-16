@@ -23,15 +23,33 @@ from ezdxf.addons.drawing.config import (
 diametro_base = 87  # 8.7cm
 diametro_injerto = 52  # 5.2cm
 numero_divisiones = 120
+lineweight = 1.5  # mm
+
 #  Rutas de los archivos de salida
-nombre_archivo_dxf = "outFiles/plantilla_corte_boca_pez.dxf"
+default_dxf_name = "outFiles/plantilla_corte_boca_pez.dxf"
 default_img_name = "outFiles/plantilla_corte_boca_pez.png"
 default_pdf_name = "outFiles/plantilla_corte_boca_pez.pdf"
+# Formato Permitido
+''' 
+	layout.PageAlignment.TOP_LEFT 
+	layout.PageAlignment.TOP_CENTER 
+	layout.PageAlignment.TOP_RIGHT 
+	layout.PageAlignment.MIDDLE_LEFT 
+	layout.PageAlignment.MIDDLE_CENTER 
+	layout.PageAlignment.MIDDLE_RIGHT 
+	layout.PageAlignment.BOTTOM_LEFT 
+	layout.PageAlignment.BOTTOM_CENTER 
+	layout.PageAlignment.BOTTOM_RIGHT 
+'''
+page_alignment = layout.PageAlignment.TOP_LEFT
+# default_pdf_name_escala = "outFiles/plantilla_corte_boca_pez_escala.pdf"
+# default_pdf_name_simple = "outFiles/plantilla_corte_boca_pez_simple.pdf"
+
 # Margen para la plantilla
 # en caso de imprimir en  a4 o otro papel  es para la figura no quede
 # al  borde del limite de la impresora
-x_margen = 30
-y_margen = 30
+x_margen = 0
+y_margen = 0
 
 # Parámetros por defecto para la conversión a imagen
 default_dpi = 300
@@ -92,6 +110,7 @@ def generar_dxf_con_puntos(x_values, y_values, puntos):
     # Calcular límites verticales
     y_max = max(y_values)
     y_base = min(y_values)
+    lineweight_conver = lineweight * 100
 
     y_range = y_max - y_base
     y_min = y_base - y_range  # Extiende el margen inferior
@@ -106,15 +125,19 @@ def generar_dxf_con_puntos(x_values, y_values, puntos):
         msp.add_line((x, y_base), (x, y))
 
     # Dibuja marco superior
-    msp.add_line((x_start, y_max), (x_end, y_max))  # horizontal superior
-    msp.add_line((x_start, y_start), (x_end, y_end))  # horizontal inferior
-    msp.add_line((x_start, y_start), (x_start, y_max))  # vertical izquierda
-    msp.add_line((x_end, y_end), (x_end, y_max))  # vertical derecha
+    msp.add_line((x_start, y_max), (x_end, y_max), dxfattribs={"lineweight": lineweight_conver})  # horizontal superior
+    msp.add_line((x_start, y_start), (x_end, y_end), dxfattribs={
+                 "lineweight": lineweight_conver})  # horizontal inferior
+    msp.add_line((x_start, y_start), (x_start, y_max), dxfattribs={
+                 "lineweight": lineweight_conver})  # vertical izquierda
+    msp.add_line((x_end, y_end), (x_end, y_max), dxfattribs={"lineweight": lineweight_conver})  # vertical derecha
 
     # Dibuja marco inferior
-    msp.add_line((x_start, y_min), (x_end, y_min))  # horizontal inferior
-    msp.add_line((x_start, y_start), (x_start, y_min))  # vertical izquierda
-    msp.add_line((x_end, y_end), (x_end, y_min), dxfattribs={"linetype": "DASHED"})  # vertical derecha entrecortada
+    msp.add_line((x_start, y_min), (x_end, y_min), dxfattribs={"lineweight": lineweight_conver})  # horizontal inferior
+    msp.add_line((x_start, y_start), (x_start, y_min), dxfattribs={
+                 "lineweight": lineweight_conver})  # vertical izquierda
+    msp.add_line((x_end, y_end), (x_end, y_min), dxfattribs={
+                 "linetype": "DASHED", "lineweight": lineweight_conver})  # vertical derecha entrecortada
 
     # Agrega una cota lineal horizontal
     dim = msp.add_linear_dim(
@@ -159,18 +182,48 @@ def generar_dxf_con_puntos(x_values, y_values, puntos):
     )
     dim.set_arrows(blk=ezdxf.ARROWS.closed_filled, size=1.5)
     dim.render()
-
-    # Crear una polilínea con los puntos
-    msp.add_lwpolyline(puntos, dxfattribs={"closed": False})
+    # crea la linae uniendo todos los puntos
+    msp.add_lwpolyline(puntos, dxfattribs={"closed": False, "lineweight": lineweight_conver})
+    # Crear archivo DFX
     # Guardar el archivo DXF
-    doc.saveas(nombre_archivo_dxf)
-    print(f"Archivo DXF guardado como {nombre_archivo_dxf}")
+    doc.saveas(default_dxf_name)
+    print(f"Archivo DXF guardado como... {default_dxf_name}")
 
-    backend = pymupdf.PyMuPdfBackend()
-    Frontend(RenderContext(doc), backend).draw_layout(msp)
-    pdf_bytes = backend.get_pdf_bytes(layout.Page(100, 40, layout.Units.mm))
+    # # Crear un PDF para imprimir
+    # backend = pymupdf.PyMuPdfBackend()
+    # Frontend(RenderContext(doc), backend).draw_layout(msp)
+    # pdf_bytes = backend.get_pdf_bytes(layout.Page(100, 40, layout.Units.mm))
+    # Path(default_pdf_name_simple).write_bytes(pdf_bytes)
+    # print(f"PDF simple guardado como... {default_pdf_name_simple}")
+
+    # backend_B = pymupdf.PyMuPdfBackend()
+    # Frontend(RenderContext(doc), backend_B).draw_layout(msp)
+    # pdf_bytes_B = backend_B.get_pdf_bytes(layout.Page(0, 0, layout.Units.mm), settings=layout.Settings(scale=10))
+    # Path(default_pdf_name_escala).write_bytes(pdf_bytes_B)
+    # print(f"PDF con img  en escala  guardada como... {default_pdf_name_escala}")
+
+    config_l = Configuration(
+        background_policy=BackgroundPolicy.WHITE,
+        custom_bg_color="#002082",
+        color_policy=ColorPolicy.MONOCHROME_DARK_BG,
+        custom_fg_color="#ced8f7",
+        lineweight_policy=LineweightPolicy.RELATIVE,
+        lineweight_scaling=0.5,
+    )
+    backend_l = pymupdf.PyMuPdfBackend()
+    height, width, _ = layout.PAGE_SIZES["ISO A4"]
+
+    Frontend(RenderContext(doc), backend_l, config=config_l).draw_layout(msp)
+    page = layout.Page(width, height, margins=layout.Margins.all(15))
+    pdf_bytes = backend_l.get_pdf_bytes(
+        page,
+        settings=layout.Settings(
+            fit_page=False,
+            page_alignment=page_alignment,
+            scale=1.0)
+    )
     Path(default_pdf_name).write_bytes(pdf_bytes)
-    print(f"PDF guardada como {default_pdf_name}")
+    print(f"PDF con dxf alineada guardado como... {default_pdf_name}")
 
     fig = plt.figure()
     ax = fig.add_axes([0, 0, 1, 1])
