@@ -1,6 +1,6 @@
 # Ignore node_modules directory
-**/DXF2img
-**/Easy-DXF-Viewer
+**/test_unit
+**/test_unit/.*
 **/outFiles
 **/outFiles/.*
 **/build

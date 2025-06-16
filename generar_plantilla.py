@@ -15,7 +15,7 @@ from ezdxf.addons.drawing.config import (
     ColorPolicy,
     LineweightPolicy,
 )
-
+import svgwrite
 # Todos los cálculos y funciones necesarios para el cálculo de coordenadas del corte sagital
 # Los datos se generaran en un formato json  que se pueda utilizar para graficar
 # Todas la unidades están en mm
@@ -27,6 +27,7 @@ lineweight = 1.5  # mm
 
 #  Rutas de los archivos de salida
 default_dxf_name = "outFiles/plantilla_corte_boca_pez.dxf"
+default_svg_name = "outFiles/plantilla_corte_boca_pez.svg"
 default_img_name = "outFiles/plantilla_corte_boca_pez.png"
 default_pdf_name = "outFiles/plantilla_corte_boca_pez.pdf"
 # Formato Permitido
@@ -48,8 +49,8 @@ page_alignment = layout.PageAlignment.TOP_LEFT
 # Margen para la plantilla
 # en caso de imprimir en  a4 o otro papel  es para la figura no quede
 # al  borde del limite de la impresora
-x_margen = 0
-y_margen = 0
+x_margen = 20
+y_margen = 100
 
 # Parámetros por defecto para la conversión a imagen
 default_dpi = 300
@@ -93,7 +94,64 @@ def incremente_margen(x_values, y_values, puntos):
     return x_values_add, y_values_add, punto_add
 
 
-def generar_dxf_con_puntos(x_values, y_values, puntos):
+def obtener_max_min_ejes(puntos):
+    """Devuelve los valores máximos y mínimos de X e Y en una lista de puntos."""
+    if not puntos:
+        return None, None, None, None
+
+    x_min, y_min = puntos[0]
+    x_max, y_max = puntos[0]
+
+    for x, y in puntos:
+        x_min = min(x_min, x)
+        x_max = max(x_max, x)
+        y_min = min(y_min, y)
+        y_max = max(y_max, y)
+
+    return x_max, y_max, x_min, y_min
+
+
+def generar_svg(x_values, y_values, puntos, ):
+    # Dimensiones del papel A4 en mm
+    width_mm = 210
+    height_mm = 297
+
+    # Crear el documento SVG con tamaño basado en mm
+    dwg = svgwrite.Drawing(default_svg_name, size=(
+        f"{width_mm}mm", f"{height_mm}mm"), viewBox=f"0 0 {width_mm} {height_mm}")
+
+    x_max, y_max, x_base, y_base = obtener_max_min_ejes(puntos)
+    y_range = abs(y_max - y_base)
+    print(x_max, y_max, x_base, y_base)
+    linea_punteada = "5,3"
+    # linea base
+    dwg.add(dwg.line(start=puntos[0], end=puntos[-1], stroke="black", stroke_width=0.3,
+                     stroke_dasharray=linea_punteada))
+    dwg.add(dwg.line(start=(x_base, (y_base-y_range)), end=(x_max, y_max-y_range*2),
+            stroke="black", stroke_width=0.3, stroke_dasharray=linea_punteada))
+    dwg.add(dwg.line(start=(x_base, (y_base+y_range)), end=(x_max, y_base+y_range),
+            stroke="black", stroke_width=0.3, stroke_dasharray=linea_punteada))
+    dwg.add(dwg.line(start=(x_base, (y_base-y_range)), end=(x_base, (y_base+y_range)),
+            stroke="black", stroke_width=0.3,  stroke_dasharray=linea_punteada))
+
+    dwg.add(dwg.line(start=(x_max, y_base+y_range), end=(x_max, (y_base-y_range)),
+            stroke="black", stroke_width=0.3, stroke_dasharray=linea_punteada))
+
+    # Agregar los puntos individuales en milímetros
+    for x, y in puntos:
+        dwg.add(dwg.circle(center=(x, y), r=0.5, fill="red"))
+        dwg.add(dwg.line(start=(x, y_base), end=(x, y), stroke="black", stroke_width=0.3))
+        dwg.add(dwg.circle(center=(x, y_base), r=0.5, fill="green"))
+
+    # Agregar la polilínea conectando los puntos en milímetros
+    dwg.add(dwg.polyline(points=puntos, stroke="blue", fill="none", stroke_width=0.3))
+
+    # Guardar el archivo SVG
+    dwg.save()
+    print(f"Archivo SVG guardado como... '{default_svg_name}'.")
+
+
+def generar_dxf(x_values, y_values, puntos):
 
     doc = ezdxf.new("R2010")
     # para hoja a4 210 x 297
@@ -242,4 +300,5 @@ x_val_m, y_val_m, puntos_m = incremente_margen(x_values, y_values, puntos)
 # ---------------------
 
 # generar_dxf_con_linea(puntos, "corte_sagital.dxf")
-generar_dxf_con_puntos(x_val_m, y_val_m, puntos_m)
+generar_dxf(x_val_m, y_val_m, puntos_m)
+generar_svg(x_val_m, y_val_m, puntos_m)

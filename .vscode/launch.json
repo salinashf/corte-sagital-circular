@@ -1,0 +1,65 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "DebugPy-Name: generar_plantilla_arg.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "generar_plantilla_arg.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--diametro_base",
+                "87",
+                "--diametro_injerto",
+                "52",
+                "--numero_divisiones",
+                "120",
+                "--ancho_linea",
+                "1.5"
+            ],
+            "purpose": [
+                "debug-in-terminal"
+            ]
+        },
+        {
+            "name": "DebugPy-Alias: generar_plantilla_arg.py ",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "generar_plantilla_arg.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "-db",
+                "87",
+                "-di",
+                "52",
+                "-nd",
+                "120",
+                "-al",
+                "1.5"
+            ],
+            "purpose": [
+                "debug-in-terminal"
+            ]
+        },
+        {
+            "name": "RunPy-Alias: generar_plantilla_arg.py ",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "generar_plantilla_arg.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "-db",
+                "87",
+                "-di",
+                "52",
+                "-nd",
+                "120",
+                "-al",
+                "1.5"
+            ]
+        }
+    ]
+}
