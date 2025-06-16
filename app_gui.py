@@ -204,16 +204,6 @@ class crear_gui():
         tk.Label(frame_content_visor, text="Plantilla del corte sagital",
                  font=("Arial", 12)).pack(anchor="w", pady=(5, 0))
 
-        # # Crear una figura de ejemplo
-        # fig, ax = plt.subplots()
-        # ax.plot([1, 2, 3, 4], [10, 5, 15, 7], marker='o')
-        # ax.set_title("Ejemplo de gráfico")
-
-        # # Integrar el gráfico al content_frame
-        # canvas = FigureCanvasTkAgg(fig, master=frame_content_visor)
-        # canvas.draw()
-        # canvas.get_tk_widget().pack(fill="both", expand=True)
-
     def crear_footer(self):
         # Pie de página
         footer = tk.Label(self.root, text="Salinas Henry", bg="lightblue", fg="white", height=2)

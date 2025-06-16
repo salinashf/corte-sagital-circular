@@ -1,10 +1,11 @@
 import matplotlib.pyplot as plt
 from ezdxf.addons.drawing import RenderContext, Frontend
 from ezdxf.addons.drawing.matplotlib import MatplotlibBackend
-import re
 import math
 import matplotlib.pyplot as plt
 import ezdxf
+from ezdxf.enums import PaperFormat
+
 # Todos los cálculos y funciones necesarios para el cálculo de coordenadas del corte sagital
 # Los datos se generaran en un formato json  que se pueda utilizar para graficar
 # Todas la unidades están en mm
@@ -12,19 +13,21 @@ import ezdxf
 diametro_base = 87  # 8.7cm
 diametro_injerto = 52  # 5.2cm
 numero_divisiones = 120
-#  Margen para la plantilla
-x_margen = 0
-y_margen = 0
+#  Rutas de los archivos de salida
 nombre_archivo_dxf = "outFiles/plantilla_corte_boca_pez.dxf"
+default_img_name = "outFiles/plantilla_corte_boca_pez.png"
+# Margen para la plantilla
+# en caso de imprimir en  a4 o otro papel  es para la figura no quede
+# al  borde del limite de la impresora
+x_margen = 30
+y_margen = 30
+
 # Parámetros por defecto para la conversión a imagen
-default_img_res = 300
+default_dpi = 300
 default_bg_color = "#2DAB33"  # White
-default_img_name = "outFiles/plantilla_corte_boca_pez"
-default_img_format = '.png'
+
 
 # Función para calcular las coordenadas del corte sagital , boca de pez
-
-
 def coordenadas_corte_sagital():
 
     # Cálculos
@@ -63,7 +66,14 @@ def incremente_margen(x_values, y_values, puntos):
 
 def generar_dxf_con_puntos(x_values, y_values, puntos):
 
-    doc = ezdxf.new()
+    doc = ezdxf.new("R2010")
+    # para hoja a4 210 x 297
+    # Create an A4 page layout
+    # doc.header["$LIMMIN"] = (0, 0)
+    # doc.header["$LIMMAX"] = (210, 297)
+    # page = layout.Page(210, 297, layout.Units.mm, margins=layout.Margins.all(20))
+    # layout = doc.layouts.create("A4_Portrait", fmt=PaperFormat.A4, landscape=False)
+
     doc.units = ezdxf.units.MM  # Establecer unidad en milímetros
     msp = doc.modelspace()
     auditor = doc.audit()
@@ -152,21 +162,8 @@ def generar_dxf_con_puntos(x_values, y_values, puntos):
     ezdxf.addons.drawing.properties.MODEL_SPACE_BG_COLOR = default_bg_color
     out = MatplotlibBackend(ax)
     Frontend(ctx, out).draw_layout(msp, finalize=True)
-    first_param = f"{default_img_name}{default_img_format}"
-    fig.savefig(first_param, dpi=default_img_res)
-    print(f"Imagen guardada como {first_param}")
-
-
-def generar_dxf_con_linea(puntos, nombre_archivo="corte_sagital.dxf"):
-    doc = ezdxf.new()
-    doc.units = ezdxf.units.MM  # Asegura que las unidades sean milímetros
-    msp = doc.modelspace()
-
-    # Crear una polilínea con los puntos
-    msp.add_lwpolyline(puntos, dxfattribs={"closed": False})
-
-    doc.saveas(nombre_archivo)
-    print(f"Archivo DXF guardado como {nombre_archivo}")
+    fig.savefig(default_img_name, dpi=default_dpi)
+    print(f"Imagen guardada como {default_img_name}")
 
 
 # Generar coordenadas y exportarlas a DXF
