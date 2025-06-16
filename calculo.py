@@ -1,10 +1,20 @@
+from pathlib import Path
+import time
 import matplotlib.pyplot as plt
 from ezdxf.addons.drawing import RenderContext, Frontend
 from ezdxf.addons.drawing.matplotlib import MatplotlibBackend
 import math
 import matplotlib.pyplot as plt
 import ezdxf
-from ezdxf.enums import PaperFormat
+from ezdxf.addons.drawing import pymupdf, layout
+from ezdxf.math import global_bspline_interpolation
+from ezdxf.addons.drawing import Frontend, RenderContext
+from ezdxf.addons.drawing.config import (
+    Configuration,
+    BackgroundPolicy,
+    ColorPolicy,
+    LineweightPolicy,
+)
 
 # Todos los cálculos y funciones necesarios para el cálculo de coordenadas del corte sagital
 # Los datos se generaran en un formato json  que se pueda utilizar para graficar
@@ -16,6 +26,7 @@ numero_divisiones = 120
 #  Rutas de los archivos de salida
 nombre_archivo_dxf = "outFiles/plantilla_corte_boca_pez.dxf"
 default_img_name = "outFiles/plantilla_corte_boca_pez.png"
+default_pdf_name = "outFiles/plantilla_corte_boca_pez.pdf"
 # Margen para la plantilla
 # en caso de imprimir en  a4 o otro papel  es para la figura no quede
 # al  borde del limite de la impresora
@@ -154,6 +165,12 @@ def generar_dxf_con_puntos(x_values, y_values, puntos):
     # Guardar el archivo DXF
     doc.saveas(nombre_archivo_dxf)
     print(f"Archivo DXF guardado como {nombre_archivo_dxf}")
+
+    backend = pymupdf.PyMuPdfBackend()
+    Frontend(RenderContext(doc), backend).draw_layout(msp)
+    pdf_bytes = backend.get_pdf_bytes(layout.Page(100, 40, layout.Units.mm))
+    Path(default_pdf_name).write_bytes(pdf_bytes)
+    print(f"PDF guardada como {default_pdf_name}")
 
     fig = plt.figure()
     ax = fig.add_axes([0, 0, 1, 1])
