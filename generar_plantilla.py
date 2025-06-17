@@ -50,7 +50,7 @@ page_alignment = layout.PageAlignment.TOP_LEFT
 # en caso de imprimir en  a4 o otro papel  es para la figura no quede
 # al  borde del limite de la impresora
 x_margen = 20
-y_margen = 100
+y_margen = 150
 
 # Parámetros por defecto para la conversión a imagen
 default_dpi = 300

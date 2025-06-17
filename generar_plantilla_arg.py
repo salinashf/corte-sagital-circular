@@ -31,8 +31,8 @@ class CorteSagital:
         self.page_alignment = layout.PageAlignment.TOP_LEFT
         self.default_dpi = 300
         self.default_bg_color = "#2DAB33"
-        self.x_margen = 0
-        self.y_margen = 0
+        self.x_margen = 20
+        self.y_margen = 150
 
     def calcular_coordenadas(self):
         radio_base = self.diametro_base / 2
@@ -56,6 +56,12 @@ class CorteSagital:
         x_values = [p["x"] for p in lista_puntos]
         y_values = [p["y"] for p in lista_puntos]
         return x_values, y_values, puntos
+
+    def incremente_margen(self, x_values, y_values, puntos):
+        x_values_add = [x_p + self.x_margen for x_p in x_values]
+        y_values_add = [y_p + self.y_margen for y_p in y_values]
+        punto_add = [(x_p + self.x_margen, y_p + self.y_margen) for x_p, y_p in puntos]
+        return x_values_add, y_values_add, punto_add
 
     def obtener_max_min_ejes(self, puntos):
         """Devuelve los valores máximos y mínimos de X e Y en una lista de puntos."""
@@ -250,8 +256,9 @@ def main():
     corte = CorteSagital(args.diametro_base, args.diametro_injerto, args.numero_divisiones, args.ancho_linea)
 
     x_values, y_values, puntos = corte.calcular_coordenadas()
-    corte.generar_dxf(x_values, y_values, puntos)
-    corte.generar_svg(x_values, y_values, puntos)
+    x_values_margen, y_values_margen, puntos_margen = corte.incremente_margen(x_values, y_values, puntos)
+    corte.generar_dxf(x_values_margen, y_values_margen, puntos_margen)
+    corte.generar_svg(x_values_margen, y_values_margen, puntos_margen)
 
 
 if __name__ == "__main__":
