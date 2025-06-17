@@ -3,3 +3,4 @@ matplotlib>=3.0.0
 mplcursors>=0.5.1
 PyMuPDF>=1.21.0
 tk
+svgwrite
