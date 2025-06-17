@@ -16,6 +16,7 @@ from ezdxf.addons.drawing.config import (
     LineweightPolicy,
 )
 import svgwrite
+import csv
 # Todos los cálculos y funciones necesarios para el cálculo de coordenadas del corte sagital
 # Los datos se generaran en un formato json  que se pueda utilizar para graficar
 # Todas la unidades están en mm
@@ -30,6 +31,7 @@ grosor_injerto = 1
 #  Rutas de los archivos de salida
 default_dxf_name = "outFiles/plantilla_corte_boca_pez.dxf"
 default_svg_name = "outFiles/plantilla_corte_boca_pez.svg"
+default_csv_name = "outFiles/plantilla_corte_boca_pez.csv"
 default_img_name = "outFiles/plantilla_corte_boca_pez.png"
 default_pdf_name = "outFiles/plantilla_corte_boca_pez.pdf"
 # Formato Permitido
@@ -53,6 +55,8 @@ page_alignment = layout.PageAlignment.TOP_LEFT
 # al  borde del limite de la impresora
 x_margen = 20
 y_margen = 150
+# header del csv
+header_csv = ['angle_grades', 'axis_x_mm', 'axis_y_mm']
 
 # Parámetros por defecto para la conversión a imagen
 default_dpi = 300
@@ -105,6 +109,7 @@ def coordenadas_corte_sagital():
     # Calcular puntos
     lista_puntos = []
     puntos = []
+    data_plantilla = []
     for seqno, angulo_paso in enumerate(range(0, 361, int(angulo_division))):
         rst = 0.0
         if angulo_inclinacion == 90:
@@ -116,10 +121,11 @@ def coordenadas_corte_sagital():
         y = rst
         puntos.append((x, y))
         lista_puntos.append({"x": x, "y": y})
+        data_plantilla.append([angulo_paso, x, y])
     # Extraer valores
     x_values = [p["x"] for p in lista_puntos]
     y_values = [p["y"] for p in lista_puntos]
-    return x_values, y_values, puntos
+    return x_values, y_values, puntos, data_plantilla
 
 # agrega un margen a los puntos
 
@@ -146,6 +152,21 @@ def obtener_max_min_ejes(puntos):
         y_max = max(y_max, y)
 
     return x_max, y_max, x_min, y_min
+
+
+def generar_CSV(datos_plantilla):
+    csv_file_path = default_csv_name  # Asegúrate de que esta ruta sea válida
+
+    try:
+        with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
+            csv_writer = csv.writer(csvfile)
+            csv_writer.writerow(header_csv)
+            csv_writer.writerows(datos_plantilla)
+        print(f"Archivo CSV sobrescrito exitosamente en: {csv_file_path}")
+    except PermissionError:
+        print(f"❌ No se puede sobrescribir el archivo. Asegúrate de que no esté abierto: {csv_file_path}")
+    except Exception as e:
+        print(f"❌ Ocurrió un error inesperado: {e}")
 
 
 def generar_svg(x_values, y_values, puntos, ):
@@ -332,10 +353,11 @@ def generar_dxf(x_values, y_values, puntos):
 
 
 # Generar coordenadas y exportarlas a DXF
-x_values, y_values, puntos = coordenadas_corte_sagital()
+x_values, y_values, puntos, datos_plantilla = coordenadas_corte_sagital()
 x_val_m, y_val_m, puntos_m = incremente_margen(x_values, y_values, puntos)
 # ---------------------
 
 # generar_dxf_con_linea(puntos, "corte_sagital.dxf")
 generar_dxf(x_val_m, y_val_m, puntos_m)
 generar_svg(x_val_m, y_val_m, puntos_m)
+generar_CSV(datos_plantilla)

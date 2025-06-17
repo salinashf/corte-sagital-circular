@@ -14,6 +14,7 @@ from ezdxf.addons.drawing.config import (
     LineweightPolicy,
 )
 import svgwrite
+import csv
 
 
 class CorteSagital:
@@ -28,6 +29,7 @@ class CorteSagital:
         # Rutas de los archivos de salida
         self.default_dxf_name = "outFiles/plantilla_corte_boca_pez.dxf"
         self.default_svg_name = "outFiles/plantilla_corte_boca_pez.svg"
+        self.default_csv_name = "outFiles/plantilla_corte_boca_pez.csv"
         self.default_img_name = "outFiles/plantilla_corte_boca_pez.png"
         self.default_pdf_name = "outFiles/plantilla_corte_boca_pez.pdf"
         self.page_alignment = layout.PageAlignment.TOP_LEFT
@@ -35,6 +37,8 @@ class CorteSagital:
         self.default_bg_color = "#2DAB33"
         self.x_margen = 0  # 20
         self.y_margen = 0  # 150
+        # Define the header row
+        self.header_csv = ['angle_grades', 'axis_x_mm', 'axis_y_mm']
 
     def calcular_directrices_45(self, radio_base, radio_injerto, angulo_directriz, angulo_inclinacion):
         # angulo de la directriz y de inclinacion  pasado a  radianes, por motivos de que libreria math lo requiere
@@ -65,7 +69,7 @@ class CorteSagital:
 
         lista_puntos = []
         puntos = []
-
+        data_plantilla = []
         for seqno, angulo_paso in enumerate(range(0, 361, int(angulo_division))):
 
             rst = 0.0
@@ -78,10 +82,10 @@ class CorteSagital:
             y = rst
             puntos.append((x, y))
             lista_puntos.append({"x": x, "y": y})
-
+            data_plantilla.append([angulo_paso, x, y])
         x_values = [p["x"] for p in lista_puntos]
         y_values = [p["y"] for p in lista_puntos]
-        return x_values, y_values, puntos
+        return x_values, y_values, puntos, data_plantilla
 
     def incremente_margen(self, x_values, y_values, puntos):
         x_values_add = [x_p + self.x_margen for x_p in x_values]
@@ -104,6 +108,20 @@ class CorteSagital:
             y_max = max(y_max, y)
 
         return x_max, y_max, x_min, y_min
+
+    def generar_CSV(self, datos_plantilla):
+        csv_file_path = self.default_csv_name  # Asegúrate de que esta ruta sea válida
+
+        try:
+            with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                csv_writer = csv.writer(csvfile)
+                csv_writer.writerow(self.header_csv)
+                csv_writer.writerows(datos_plantilla)
+            print(f"Archivo CSV sobrescrito exitosamente en: {csv_file_path}")
+        except PermissionError:
+            print(f"❌ No se puede sobrescribir el archivo. Asegúrate de que no esté abierto: {csv_file_path}")
+        except Exception as e:
+            print(f"❌ Ocurrió un error inesperado: {e}")
 
     def generar_svg(self, x_values, y_values, puntos):
 
@@ -285,10 +303,11 @@ def main():
     corte = CorteSagital(args.diametro_base, args.diametro_injerto, args.grosor_injerto,
                          args.numero_divisiones, args.ancho_linea, args.angulo_inclinacion)
 
-    x_values, y_values, puntos = corte.calcular_coordenadas()
+    x_values, y_values, puntos, datos_plantilla = corte.calcular_coordenadas()
     x_values_margen, y_values_margen, puntos_margen = corte.incremente_margen(x_values, y_values, puntos)
     corte.generar_dxf(x_values_margen, y_values_margen, puntos_margen)
     corte.generar_svg(x_values_margen, y_values_margen, puntos_margen)
+    corte.generar_CSV(datos_plantilla)
 
 
 if __name__ == "__main__":
