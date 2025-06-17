@@ -17,9 +17,10 @@ import svgwrite
 
 
 class CorteSagital:
-    def __init__(self, diametro_base, diametro_injerto, numero_divisiones, ancho_linea, angulo_inclinacion):
+    def __init__(self, diametro_base, diametro_injerto, grosor_injerto, numero_divisiones, ancho_linea, angulo_inclinacion):
         self.diametro_base = diametro_base
-        self.diametro_injerto = diametro_injerto
+        self.diametro_externo_injerto = diametro_injerto
+        self.diametro_interno_injerto = diametro_injerto - grosor_injerto
         self.numero_divisiones = numero_divisiones
         self.lineweight = ancho_linea
         self.angulo_inclinacion = angulo_inclinacion
@@ -32,8 +33,8 @@ class CorteSagital:
         self.page_alignment = layout.PageAlignment.TOP_LEFT
         self.default_dpi = 300
         self.default_bg_color = "#2DAB33"
-        self.x_margen = 20
-        self.y_margen = 150
+        self.x_margen = 0  # 20
+        self.y_margen = 0  # 150
 
     def calcular_directrices_45(self, radio_base, radio_injerto, angulo_directriz, angulo_inclinacion):
         # angulo de la directriz y de inclinacion  pasado a  radianes, por motivos de que libreria math lo requiere
@@ -57,8 +58,8 @@ class CorteSagital:
 
     def calcular_coordenadas(self):
         radio_base = self.diametro_base / 2
-        radio_injerto = self.diametro_injerto / 2
-        perimetro_plantilla = self.diametro_injerto * math.pi
+        radio_injerto = self.diametro_interno_injerto / 2
+        perimetro_plantilla = self.diametro_externo_injerto * math.pi
         segmento_plantilla = perimetro_plantilla / self.numero_divisiones
         angulo_division = 360 / self.numero_divisiones
 
@@ -272,6 +273,7 @@ def main():
     parser = argparse.ArgumentParser(description="Procesar parámetros de dibujo. todo los datos en mm")
     parser.add_argument("-db", "--diametro_base", type=float, required=True, help="Diámetro de la base en mm")
     parser.add_argument("-di", "--diametro_injerto", type=float, required=True, help="Diámetro del injerto en mm")
+    parser.add_argument("-gi", "--grosor_injerto", type=float, required=True, help="Grosor del injerto en mm")
     parser.add_argument("-ai", "--angulo_inclinacion", type=float,
                         required=True, help="Angulo de inclinacion en grados ")
     parser.add_argument("-nd", "--numero_divisiones", type=int, required=True,
@@ -280,7 +282,7 @@ def main():
 
     args = parser.parse_args()
 
-    corte = CorteSagital(args.diametro_base, args.diametro_injerto,
+    corte = CorteSagital(args.diametro_base, args.diametro_injerto, args.grosor_injerto,
                          args.numero_divisiones, args.ancho_linea, args.angulo_inclinacion)
 
     x_values, y_values, puntos = corte.calcular_coordenadas()

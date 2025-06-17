@@ -24,7 +24,8 @@ diametro_base = 87  # 8.7cm
 diametro_injerto = 52  # 5.2cm
 numero_divisiones = 120
 lineweight = 1.5  # mm
-angulo_inclinacion = 45
+angulo_inclinacion = 90
+grosor_injerto = 1
 
 #  Rutas de los archivos de salida
 default_dxf_name = "outFiles/plantilla_corte_boca_pez.dxf"
@@ -95,7 +96,7 @@ def coordenadas_corte_sagital():
 
     # Cálculos
     radio_base = diametro_base / 2
-    radio_injerto = diametro_injerto / 2
+    radio_injerto = (diametro_injerto - grosor_injerto) / 2
     perimetro_plantilla = diametro_injerto * math.pi
     segmento_plantilla = perimetro_plantilla / numero_divisiones
     angulo_division = 360 / numero_divisiones
