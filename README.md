@@ -34,5 +34,5 @@ Las funciones donde describe las fórmulas están en
 
 - Función para 90 grados
   > `calcular_directrices_90`
-- Función para 0 y 89 grados
+- Función para entre 0 y 89 grados
   > `calcular_directrices_45`
