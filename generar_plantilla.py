@@ -56,8 +56,38 @@ y_margen = 150
 default_dpi = 300
 default_bg_color = "#2DAB33"  # White
 
-
 # Función para calcular las coordenadas del corte sagital , boca de pez
+
+
+def calcular_directrices_45(radio_base, radio_injerto, angulo_directriz):
+    adr = math.radians(angulo_directriz)
+    angulo_inclinacion = math.radians(45)
+
+    calculo = (radio_injerto + math.cos(adr) * radio_injerto) * math.tan(angulo_inclinacion) + \
+        (radio_base - math.sqrt(
+            radio_base**2 - (math.sin(adr) * radio_injerto)**2
+        )
+    ) \
+        / math.cos(angulo_inclinacion)
+    return calculo
+
+
+def calcular_directrices_90(radio_base, radio_injerto, angulo_directriz):
+    adr = math.radians(angulo_directriz)
+    rst_cal = radio_base - \
+        math.sqrt(radio_base**2 - (math.sin(adr) * radio_injerto)**2)
+    return rst_cal
+
+
+# def calcular_directrices_90(radio_base, radio_injerto, angulo_directriz):
+#     adr = math.radians(angulo_directriz)
+
+#     rst_cal = math.sin(adr) * radio_injerto
+#     rst_cal = math.sqrt(math.pow(radio_base, 2) - math.pow(rst_cal, 2))
+#     rst_cal = radio_base - rst_cal
+#     return rst_cal
+
+
 def coordenadas_corte_sagital():
 
     # Cálculos
@@ -72,9 +102,7 @@ def coordenadas_corte_sagital():
     lista_puntos = []
     puntos = []
     for seqno, angulo_paso in enumerate(range(0, 361, int(angulo_division))):
-        rst = math.sin(math.radians(angulo_paso)) * radio_injerto
-        rst = math.sqrt(math.pow(radio_base, 2) - math.pow(rst, 2))
-        rst = radio_base - rst
+        rst = calcular_directrices_45(radio_base, radio_injerto, angulo_paso)
         x = seqno * segmento_plantilla
         y = rst
         puntos.append((x, y))
