@@ -1,4 +1,4 @@
-# Plantilla para corte boca de pez
+# Plantilla para corte boca de pez ![image](screenshot/aplicando_plantilla.gif)
 
 Este script permite generar una plantilla para hacer corte boca de pez, el script genera
 
