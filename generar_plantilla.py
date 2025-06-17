@@ -24,6 +24,7 @@ diametro_base = 87  # 8.7cm
 diametro_injerto = 52  # 5.2cm
 numero_divisiones = 120
 lineweight = 1.5  # mm
+angulo_inclinacion = 45
 
 #  Rutas de los archivos de salida
 default_dxf_name = "outFiles/plantilla_corte_boca_pez.dxf"
@@ -59,24 +60,26 @@ default_bg_color = "#2DAB33"  # White
 # Función para calcular las coordenadas del corte sagital , boca de pez
 
 
-def calcular_directrices_45(radio_base, radio_injerto, angulo_directriz):
+def calcular_directrices_45(radio_base, radio_injerto, angulo_directriz, angulo_inclinacion):
+    # angulo de la directriz y de inclinacion  pasado a  radianes, por motivos de que libreria math lo requiere
     adr = math.radians(angulo_directriz)
-    angulo_inclinacion = math.radians(45)
+    air = math.radians(angulo_inclinacion)
 
-    calculo = (radio_injerto + math.cos(adr) * radio_injerto) * math.tan(angulo_inclinacion) + \
+    calcul_directriz = (radio_injerto + math.cos(adr) * radio_injerto) * math.tan(air) + \
         (radio_base - math.sqrt(
             radio_base**2 - (math.sin(adr) * radio_injerto)**2
         )
     ) \
-        / math.cos(angulo_inclinacion)
-    return calculo
+        / math.cos(air)
+    return calcul_directriz
 
 
-def calcular_directrices_90(radio_base, radio_injerto, angulo_directriz):
+def calcular_directrices_90(radio_base, radio_injerto, angulo_directriz, angulo_inclinacion):
+    # angulo de la directriz pasado a  radianes, por motivos de que libreria math lo requiere
     adr = math.radians(angulo_directriz)
-    rst_cal = radio_base - \
+    calcul_directriz = radio_base - \
         math.sqrt(radio_base**2 - (math.sin(adr) * radio_injerto)**2)
-    return rst_cal
+    return calcul_directriz
 
 
 # def calcular_directrices_90(radio_base, radio_injerto, angulo_directriz):
@@ -102,7 +105,12 @@ def coordenadas_corte_sagital():
     lista_puntos = []
     puntos = []
     for seqno, angulo_paso in enumerate(range(0, 361, int(angulo_division))):
-        rst = calcular_directrices_45(radio_base, radio_injerto, angulo_paso)
+        rst = 0.0
+        if angulo_inclinacion == 90:
+            rst = calcular_directrices_90(radio_base, radio_injerto, angulo_paso, angulo_inclinacion)
+        else:
+            rst = calcular_directrices_45(radio_base, radio_injerto, angulo_paso, angulo_inclinacion)
+
         x = seqno * segmento_plantilla
         y = rst
         puntos.append((x, y))

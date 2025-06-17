@@ -17,11 +17,12 @@ import svgwrite
 
 
 class CorteSagital:
-    def __init__(self, diametro_base, diametro_injerto, numero_divisiones, ancho_linea):
+    def __init__(self, diametro_base, diametro_injerto, numero_divisiones, ancho_linea, angulo_inclinacion):
         self.diametro_base = diametro_base
         self.diametro_injerto = diametro_injerto
         self.numero_divisiones = numero_divisiones
         self.lineweight = ancho_linea
+        self.angulo_inclinacion = angulo_inclinacion
 
         # Rutas de los archivos de salida
         self.default_dxf_name = "outFiles/plantilla_corte_boca_pez.dxf"
@@ -34,6 +35,26 @@ class CorteSagital:
         self.x_margen = 20
         self.y_margen = 150
 
+    def calcular_directrices_45(self, radio_base, radio_injerto, angulo_directriz, angulo_inclinacion):
+        # angulo de la directriz y de inclinacion  pasado a  radianes, por motivos de que libreria math lo requiere
+        adr = math.radians(angulo_directriz)
+        air = math.radians(angulo_inclinacion)
+
+        calcul_directriz = (radio_injerto + math.cos(adr) * radio_injerto) * math.tan(air) + \
+            (radio_base - math.sqrt(
+                radio_base**2 - (math.sin(adr) * radio_injerto)**2
+            )
+        ) \
+            / math.cos(air)
+        return calcul_directriz
+
+    def calcular_directrices_90(self, radio_base, radio_injerto, angulo_directriz, angulo_inclinacion):
+        # angulo de la directriz pasado a  radianes, por motivos de que libreria math lo requiere
+        adr = math.radians(angulo_directriz)
+        calcul_directriz = radio_base - \
+            math.sqrt(radio_base**2 - (math.sin(adr) * radio_injerto)**2)
+        return calcul_directriz
+
     def calcular_coordenadas(self):
         radio_base = self.diametro_base / 2
         radio_injerto = self.diametro_injerto / 2
@@ -45,9 +66,13 @@ class CorteSagital:
         puntos = []
 
         for seqno, angulo_paso in enumerate(range(0, 361, int(angulo_division))):
-            rst = math.sin(math.radians(angulo_paso)) * radio_injerto
-            rst = math.sqrt(math.pow(radio_base, 2) - math.pow(rst, 2))
-            rst = radio_base - rst
+
+            rst = 0.0
+            if self.angulo_inclinacion == 90:
+                rst = self.calcular_directrices_90(radio_base, radio_injerto, angulo_paso, self.angulo_inclinacion)
+            else:
+                rst = self.calcular_directrices_45(radio_base, radio_injerto, angulo_paso, self.angulo_inclinacion)
+
             x = seqno * segmento_plantilla
             y = rst
             puntos.append((x, y))
@@ -247,13 +272,16 @@ def main():
     parser = argparse.ArgumentParser(description="Procesar parámetros de dibujo. todo los datos en mm")
     parser.add_argument("-db", "--diametro_base", type=float, required=True, help="Diámetro de la base en mm")
     parser.add_argument("-di", "--diametro_injerto", type=float, required=True, help="Diámetro del injerto en mm")
+    parser.add_argument("-ai", "--angulo_inclinacion", type=float,
+                        required=True, help="Angulo de inclinacion en grados ")
     parser.add_argument("-nd", "--numero_divisiones", type=int, required=True,
                         help="Número de divisiones, o numero de cordenadas")
     parser.add_argument("-al", "--ancho_linea", type=float, required=True, help="Grosor de la del dibujo, línea en mm")
 
     args = parser.parse_args()
 
-    corte = CorteSagital(args.diametro_base, args.diametro_injerto, args.numero_divisiones, args.ancho_linea)
+    corte = CorteSagital(args.diametro_base, args.diametro_injerto,
+                         args.numero_divisiones, args.ancho_linea, args.angulo_inclinacion)
 
     x_values, y_values, puntos = corte.calcular_coordenadas()
     x_values_margen, y_values_margen, puntos_margen = corte.incremente_margen(x_values, y_values, puntos)
