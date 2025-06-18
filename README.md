@@ -71,7 +71,11 @@ Este comando permitir visualizar en 3 dimensiones `3d` el cómo se ve el corte
 
 `python 3d_graph_template.py '--diametro_injerto' '52'`
 
-##### RESULTADOS
+##### RESULTADOS EN 3D
+
+![image](screenshot/plantilla_corte_boca_pez_3D.gif)
+
+##### RESULTADOS EN 2D
 
 [Ver archivo corte boca pez en PDF](screenshot/plantilla_corte_boca_pez.pdf)
 

@@ -14,7 +14,7 @@ class CylinderPlotter:
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(111, projection='3d')
 
-    def plot_cylinder(self, center, radius, height, num_points=50, color='red'):
+    def __plot_cylinder(self, center, radius, height, num_points=50, color='red'):
         cx, cy, cz = center
         theta = np.linspace(0, 2 * np.pi, num_points)
         z = np.linspace(cz, cz + height, num_points)
@@ -30,7 +30,7 @@ class CylinderPlotter:
             y_circle = radius * np.sin(theta) + cy
             self.ax.plot(x_circle, y_circle, z_circle, color=color)
 
-    def plot_line_template(self, center, radio, angulo, directriz):
+    def __plot_line_template(self, center, radio, angulo, directriz):
         cx, cy, _ = center
         p_center = np.array([cx, cy])
         B = np.array([radio, 0])
@@ -52,13 +52,13 @@ class CylinderPlotter:
                     angle = int(angle)
                     if angle < 360:
                         self.max_value = max(float(y_val), self.max_value)
-                        self.plot_line_template(center, self.radio, angle, y_val)
+                        self.__plot_line_template(center, self.radio, angle, y_val)
 
     def plot_scene(self):
         self.process_csv_and_plot()
         for direction in [-1, 1]:
             center = (self.px, self.py, direction * self.max_value)
-            self.plot_cylinder(center, self.radio, self.max_value, color='blue' if direction < 0 else 'green')
+            self.__plot_cylinder(center, self.radio, self.max_value, color='blue' if direction < 0 else 'green')
 
         self.ax.set_xlabel('Eje X')
         self.ax.set_ylabel('Eje Y')
