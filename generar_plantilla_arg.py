@@ -135,7 +135,7 @@ class CorteSagital:
 
         x_max, y_max, x_base, y_base = self.obtener_max_min_ejes(puntos)
         y_range = abs(y_max - y_base)
-        print(x_max, y_max, x_base, y_base)
+
         linea_punteada = "5,3"
         # linea base
         dwg.add(dwg.line(start=puntos[0], end=puntos[-1], stroke="black", stroke_width=0.3,

@@ -27,6 +27,21 @@
             ]
         },
         {
+            "name": "DebugPy-Name: 3d_graph_template.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "3d_graph_template.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--diametro_injerto",
+                "52"
+            ],
+            "purpose": [
+                "debug-in-terminal"
+            ]
+        },
+        {
             "name": "DebugPy-Alias: generar_plantilla_arg.py ",
             "type": "debugpy",
             "request": "launch",

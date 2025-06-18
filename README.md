@@ -67,6 +67,9 @@ El comando quedaría de la siguiente manera
 
 `python generar_plantilla_arg.py  '--diametro_base' '87' '--diametro_injerto' '52' '--grosor_injerto' '1' '--angulo_inclinacion' '90' '--numero_divisiones' '120' '--ancho_linea' '1.5'`
 
+Un script puede permitir la visualización gráfica de como ser ve el corte
+`python 3d_graph_template.py '--diametro_injerto' '52'`
+
 ##### RESULTADOS
 
 [Ver archivo corte boca pez en PDF](screenshot/plantilla_corte_boca_pez.pdf)
