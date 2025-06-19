@@ -16,6 +16,8 @@ from ezdxf.addons.drawing.config import (
 import svgwrite
 import csv
 import json
+import trimesh
+import numpy as np
 
 
 class CorteSagital:
@@ -23,15 +25,18 @@ class CorteSagital:
         self.diametro_base = diametro_base
         self.diametro_externo_injerto = diametro_injerto
         self.diametro_interno_injerto = diametro_injerto - grosor_injerto
+        self.grosor_injerto = grosor_injerto
         self.numero_divisiones = numero_divisiones
         self.lineweight = ancho_linea
         self.angulo_inclinacion = angulo_inclinacion
+        self.angulo_division = 0
 
         # Rutas de los archivos de salida
         self.default_dxf_name = "outFiles/plantilla_corte_boca_pez.dxf"
         self.default_svg_name = "outFiles/plantilla_corte_boca_pez.svg"
         self.default_csv_name = "outFiles/plantilla_corte_boca_pez.csv"
         self.default_json_name = "outFiles/plantilla_corte_boca_pez.json"
+        self.default_glb_name = "outFiles/plantilla_corte_boca_pez.glb"
         self.default_img_name = "outFiles/plantilla_corte_boca_pez.png"
         self.default_pdf_name = "outFiles/plantilla_corte_boca_pez.pdf"
         self.page_alignment = layout.PageAlignment.TOP_LEFT
@@ -67,12 +72,12 @@ class CorteSagital:
         radio_injerto = self.diametro_interno_injerto / 2
         self.perimetro_plantilla = self.diametro_externo_injerto * math.pi
         self.segmento_plantilla = self.perimetro_plantilla / self.numero_divisiones
-        angulo_division = 360 / self.numero_divisiones
+        self.angulo_division = 360 / self.numero_divisiones
 
         lista_puntos = []
         puntos = []
         data_plantilla = []
-        for seqno, angulo_paso in enumerate(range(0, 361, int(angulo_division))):
+        for seqno, angulo_paso in enumerate(range(0, 361, int(self.angulo_division))):
 
             rst = 0.0
             if self.angulo_inclinacion == 90:
@@ -117,15 +122,68 @@ class CorteSagital:
         y = radio * math.sin(theta_rad)
         return x, y
 
+    def generar_GLB(self, datos_plantilla):
+
+        radio = self.diametro_externo_injerto / 2
+        # Parámetros del cilindro hueco
+        grosor_cilindro = self.grosor_injerto
+        altura = radio*2
+        radio_interior = radio - grosor_cilindro
+        if radio_interior <= 0:
+            raise ValueError("⚠️ El grosor es demasiado grande. El radio interior sería negativo.")
+
+        segments = []
+        for seqno, (angulo_paso, x, z) in enumerate(datos_plantilla):
+            dx, dy = self.__cordena_polar_ha_rectagular_2D(radio, angulo_paso)
+            pt_a = (dx, dy, 0)
+            pt_b = (dx, dy, z)
+            segments.append([[pt_a[0], pt_a[1], pt_a[2]], [pt_b[0], pt_b[1], pt_b[2]]])
+
+        # Crear líneas 3D
+        lineas_path = trimesh.load_path(np.array(segments))
+
+        # Crear cilindros (exterior e interior) y alinearlos
+        traslacion_z = [0, 0, -altura / 2]
+        cil_ext = trimesh.creation.cylinder(radius=radio, height=altura)
+        cil_ext.apply_translation(traslacion_z)
+
+        cil_int = trimesh.creation.cylinder(radius=radio_interior, height=altura)
+        cil_int.apply_translation(traslacion_z)
+
+        # Crear cilindro hueco con diferencia booleana
+        try:
+            cil_hueco = cil_ext.difference(cil_int)
+        except Exception as e:
+            raise RuntimeError(f"❌ Error creando el cilindro hueco: {e}")
+
+        cil_hueco.visual.face_colors = [180, 180, 255, 255]
+
+        # Armar escena y exportar
+        scene = trimesh.Scene([lineas_path, cil_hueco])
+        scene.export(self.default_glb_name)
+
+        print(f"✅ Exportación completa:  {self.default_glb_name}")
+
     def generar_JSON(self, datos_plantilla):
         radio_base = self.diametro_externo_injerto / 2
-        estructura = {
-            "radio": radio_base,
-            "perimetro_plantilla": self.perimetro_plantilla,
-            "segmento_plantilla": self.segmento_plantilla,
-            "puntos": []
-        }
 
+        estructura = {
+            "parametros": {
+                "diametro_base": self.diametro_base,
+                "diametro_injerto": self.diametro_externo_injerto,
+                "grosor_injerto": self.grosor_injerto,
+                "angulo_inclinacion": self.angulo_inclinacion,
+                "numero_divisiones": self.numero_divisiones,
+            },
+            "resultado": {
+                "radio": radio_base,
+                "largo_plantilla": self.perimetro_plantilla,
+                "segmento_plantilla": self.segmento_plantilla,
+                "angulo_division": self.angulo_division,
+                "puntos": []
+            }}
+
+        resultado = estructura["resultado"]
         for seqno, (angulo_paso, x, z) in enumerate(datos_plantilla):
             dx, dy = self.__cordena_polar_ha_rectagular_2D(radio_base, angulo_paso)
             punto = {
@@ -154,7 +212,7 @@ class CorteSagital:
                     }
                 }
             }
-            estructura["puntos"].append(punto)
+            resultado["puntos"].append(punto)
 
         json_str = json.dumps(estructura, indent=3)
 
@@ -362,6 +420,7 @@ def main():
     corte.generar_dxf(x_values_margen, y_values_margen, puntos_margen)
     corte.generar_svg(x_values_margen, y_values_margen, puntos_margen)
     corte.generar_CSV(datos_plantilla)
+    corte.generar_GLB(datos_plantilla)
     corte.generar_JSON(datos_plantilla)
 
 
