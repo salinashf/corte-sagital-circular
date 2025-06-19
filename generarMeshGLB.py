@@ -1,9 +1,6 @@
-import json
 import trimesh
 import numpy as np
 import json
-import numpy as np
-import trimesh
 
 default_json_name = "outFiles/plantilla_corte_boca_pez.json"
 default_glb_name = "outFiles/plantilla_corte_boca_pez.glb"
@@ -11,8 +8,10 @@ default_glb_name = "outFiles/plantilla_corte_boca_pez.glb"
 with open(default_json_name, "r", encoding="utf-8") as f:
     data = json.load(f)
 
-radio = data["radio"]
-puntos = data["puntos"]
+parametros = data["parametros"]
+resultado = data["resultado"]
+radio = resultado["radio"]
+puntos = resultado["puntos"]
 
 # Parámetros del cilindro hueco
 grosor_cilindro = 1
@@ -21,11 +20,11 @@ radio_interior = radio - grosor_cilindro
 if radio_interior <= 0:
     raise ValueError("⚠️ El grosor es demasiado grande. El radio interior sería negativo.")
 
-segments = [
-    [[a["x"], a["y"], a["z"]], [b["x"], b["y"], b["z"]]]
-    for punto in puntos
-    for a, b in [(punto["3D"]["pt_a"], punto["3D"]["pt_b"])]
-]
+segments = []
+for punto in puntos:
+    pt_a = punto["3D"]["pt_a"]
+    pt_b = punto["3D"]["pt_b"]
+    segments.append([[pt_a["x"], pt_a["y"], pt_a["z"]], [pt_b["x"], pt_b["y"], pt_b["z"]]])
 
 # Crear líneas 3D
 lineas_path = trimesh.load_path(np.array(segments))
@@ -49,6 +48,6 @@ cil_hueco.visual.face_colors = [180, 180, 255, 255]
 # Armar escena y exportar
 scene = trimesh.Scene([lineas_path, cil_hueco])
 scene.export(default_glb_name)
-scene.show()
+# scene.show()
 
 print(f"✅ Exportación completa:  {default_glb_name}")
