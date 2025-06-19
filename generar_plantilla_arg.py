@@ -111,8 +111,14 @@ class CorteSagital:
 
         return x_max, y_max, x_min, y_min
 
+    def __cordena_polar_ha_rectagular_2D(selft, radio, theta_deg):
+        theta_rad = math.radians(theta_deg)
+        x = radio * math.cos(theta_rad)
+        y = radio * math.sin(theta_rad)
+        return x, y
+
     def generar_JSON(self, datos_plantilla):
-        radio_base = self.diametro_base / 2
+        radio_base = self.diametro_externo_injerto / 2
         estructura = {
             "radio": radio_base,
             "perimetro_plantilla": self.perimetro_plantilla,
@@ -121,23 +127,19 @@ class CorteSagital:
         }
 
         for seqno, (angulo_paso, x, z) in enumerate(datos_plantilla):
-            rad = math.radians(angulo_paso)
-            dx = radio_base * math.cos(rad)
-            dy = radio_base * math.sin(rad)
-            puntoA = (angulo_paso, dx, dy, 0)
-            puntoB = (angulo_paso, dx, dy, z)
+            dx, dy = self.__cordena_polar_ha_rectagular_2D(radio_base, angulo_paso)
             punto = {
                 "seqno": seqno,
                 "angulo": angulo_paso,
                 "3D": {
                     "pt_a": {
                         "x": dx,
-                        "y": dx,
+                        "y": dy,
                         "z": 0
                     },
                     "pt_b": {
                         "x": dx,
-                        "y": dx,
+                        "y": dy,
                         "z": z
                     }
                 },
