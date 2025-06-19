@@ -15,6 +15,7 @@ from ezdxf.addons.drawing.config import (
 )
 import svgwrite
 import csv
+import json
 
 
 class CorteSagital:
@@ -30,6 +31,7 @@ class CorteSagital:
         self.default_dxf_name = "outFiles/plantilla_corte_boca_pez.dxf"
         self.default_svg_name = "outFiles/plantilla_corte_boca_pez.svg"
         self.default_csv_name = "outFiles/plantilla_corte_boca_pez.csv"
+        self.default_json_name = "outFiles/plantilla_corte_boca_pez.json"
         self.default_img_name = "outFiles/plantilla_corte_boca_pez.png"
         self.default_pdf_name = "outFiles/plantilla_corte_boca_pez.pdf"
         self.page_alignment = layout.PageAlignment.TOP_LEFT
@@ -63,8 +65,8 @@ class CorteSagital:
     def calcular_coordenadas(self):
         radio_base = self.diametro_base / 2
         radio_injerto = self.diametro_interno_injerto / 2
-        perimetro_plantilla = self.diametro_externo_injerto * math.pi
-        segmento_plantilla = perimetro_plantilla / self.numero_divisiones
+        self.perimetro_plantilla = self.diametro_externo_injerto * math.pi
+        self.segmento_plantilla = self.perimetro_plantilla / self.numero_divisiones
         angulo_division = 360 / self.numero_divisiones
 
         lista_puntos = []
@@ -78,7 +80,7 @@ class CorteSagital:
             else:
                 rst = self.calcular_directrices_45(radio_base, radio_injerto, angulo_paso, self.angulo_inclinacion)
 
-            x = seqno * segmento_plantilla
+            x = seqno * self.segmento_plantilla
             y = rst
             puntos.append((x, y))
             lista_puntos.append({"x": x, "y": y})
@@ -108,6 +110,56 @@ class CorteSagital:
             y_max = max(y_max, y)
 
         return x_max, y_max, x_min, y_min
+
+    def generar_JSON(self, datos_plantilla):
+        radio_base = self.diametro_base / 2
+        estructura = {
+            "radio": radio_base,
+            "perimetro_plantilla": self.perimetro_plantilla,
+            "segmento_plantilla": self.segmento_plantilla,
+            "puntos": []
+        }
+
+        for seqno, (angulo_paso, x, z) in enumerate(datos_plantilla):
+            rad = math.radians(angulo_paso)
+            dx = radio_base * math.cos(rad)
+            dy = radio_base * math.sin(rad)
+            puntoA = (angulo_paso, dx, dy, 0)
+            puntoB = (angulo_paso, dx, dy, z)
+            punto = {
+                "seqno": seqno,
+                "angulo": angulo_paso,
+                "3D": {
+                    "pt_a": {
+                        "x": dx,
+                        "y": dx,
+                        "z": 0
+                    },
+                    "pt_b": {
+                        "x": dx,
+                        "y": dx,
+                        "z": z
+                    }
+                },
+                "2D": {
+                    "pt_a": {
+                        "x": x,
+                        "y": 0,
+                    },
+                    "pt_b": {
+                        "x": x,
+                        "y": z,
+                    }
+                }
+            }
+            estructura["puntos"].append(punto)
+
+        json_str = json.dumps(estructura, indent=3)
+
+        # (Opcional) Guardar en un archivo
+        with open(self.default_json_name, "w", encoding="utf-8") as f:
+            f.write(json_str)
+            print(f"Archivo JSON sobrescrito exitosamente en: {self.default_json_name}")
 
     def generar_CSV(self, datos_plantilla):
         csv_file_path = self.default_csv_name  # Asegúrate de que esta ruta sea válida
@@ -308,6 +360,7 @@ def main():
     corte.generar_dxf(x_values_margen, y_values_margen, puntos_margen)
     corte.generar_svg(x_values_margen, y_values_margen, puntos_margen)
     corte.generar_CSV(datos_plantilla)
+    corte.generar_JSON(datos_plantilla)
 
 
 if __name__ == "__main__":
