@@ -23,6 +23,7 @@ import numpy as np
 class CorteSagital:
     def __init__(self, diametro_base, diametro_injerto, grosor_injerto, numero_divisiones, ancho_linea, angulo_inclinacion):
         self.diametro_base = diametro_base
+        self.grosor_base = 4
         self.diametro_externo_injerto = diametro_injerto
         self.diametro_interno_injerto = diametro_injerto - grosor_injerto
         self.grosor_injerto = grosor_injerto
@@ -133,7 +134,9 @@ class CorteSagital:
             raise ValueError("⚠️ El grosor es demasiado grande. El radio interior sería negativo.")
 
         segments = []
+        max_axis_z = 0
         for seqno, (angulo_paso, x, z) in enumerate(datos_plantilla):
+            max_axis_z = max(max_axis_z, z)
             dx, dy = self.__cordena_polar_ha_rectagular_2D(radio, angulo_paso)
             pt_a = (dx, dy, 0)
             pt_b = (dx, dy, z)
@@ -158,8 +161,76 @@ class CorteSagital:
 
         cil_hueco.visual.face_colors = [180, 180, 255, 255]
 
+        # ------------inicio---------------
+        # ------------inicio ejes ---------
+        # Longitud de cada eje
+        longitud_eje = 100
+
+        # Ejes: (punto inicial, punto final)
+        ejes = [
+            ([[0, 0, 0], [longitud_eje, 0, 0]], [255, 0, 0, 255]),   # Eje X rojo
+            ([[0, 0, 0], [0, longitud_eje, 0]], [0, 255, 0, 255]),   # Eje Y verde
+            ([[0, 0, 0], [0, 0, longitud_eje]], [0, 0, 255, 255])    # Eje Z azul
+        ]
+
+        ejes_objs = []
+        for linea, color in ejes:
+            path = trimesh.load_path(np.array([linea]))
+            # path.visual.line_colors = np.array([color])
+            ejes_objs.append(path)
+        # ------------FIN ejes ---------
+        # Parámetros del cilindro base
+        # Ángulo en grados → radianes
+        # Se el suma 90  porque en el cilindro injerto esta el 90
+        angulo_deg = -(self.angulo_inclinacion)
+        print(angulo_deg)
+        angulo_rad = np.radians(angulo_deg)
+        # longitud del cilindro  base
+        # la longitud es arbitrario
+        longitud = self.diametro_base*3
+        grosor = self.grosor_base
+        altura = max_axis_z*6
+
+        radio_exterior = self.diametro_base / 2
+        radio_interior = radio_exterior - grosor
+
+        # Centro actual del cilindro (pivote de rotación)
+        centro_cilindro = [0, 0, altura]
+
+        # Crear matriz de rotación Y centrada en el cilindro
+        mat_rotacion = trimesh.transformations.rotation_matrix(
+            angle=angulo_rad,
+            direction=[0, 1, 0],           # Rotación en eje Y → plano X-Z
+            point=centro_cilindro          # Pivote: centro del cilindro
+        )
+
+        # Crear cilindro exterior e interior
+        cil_ext_base = trimesh.creation.cylinder(radius=radio_exterior, height=longitud, sections=64)
+        cil_int_base = trimesh.creation.cylinder(radius=radio_interior, height=longitud, sections=64)
+
+        # Rotar ambos para alinearlos al eje X (por defecto apuntan en Z)
+        rot_x = trimesh.transformations.rotation_matrix(np.pi / 2, [0, 1, 0])
+        cil_ext_base.apply_transform(rot_x)
+        cil_int_base.apply_transform(rot_x)
+
+        # Trasladar para que el cilindro quede centrado en X
+        # (ya está centrado por defecto en su eje, no necesitas más traslación)
+
+        # Crear diferencia booleana
+        cil_hueco_base = cil_ext_base.difference(cil_int_base)
+        # Colocar azul claro
+        cil_hueco_base.visual.face_colors = [180, 200, 255, 255]
+
+        # Elevar en Z
+        cil_hueco_base.apply_translation([0, 0, altura])
+
+        # Aplicar la rotación al cilindro hueco
+        cil_hueco_base.apply_transform(mat_rotacion)
+
+        # ------------FIN---------------
+
         # Armar escena y exportar
-        scene = trimesh.Scene([lineas_path, cil_hueco])
+        scene = trimesh.Scene([lineas_path, cil_hueco, cil_hueco_base, ejes_objs])
         scene.export(self.default_glb_name)
 
         print(f"✅ Exportación completa:  {self.default_glb_name}")
