@@ -187,7 +187,6 @@ class CorteSagital:
         if self.angulo_inclinacion == 90:
             angulo_deg = 0
 
-        print(angulo_deg)
         angulo_rad = np.radians(angulo_deg)
         # longitud del cilindro  base
         # la longitud es arbitrario
