@@ -79,6 +79,8 @@ Este comando permitir visualizar en 3 dimensiones `3d` el cómo se ve el corte
 
 [Ver archivo corte boca pez en PDF](screenshot/plantilla_corte_boca_pez.pdf)
 
+Un ejemplo de como quedaria el corte [Demo](https://salinashf.github.io/corte-sagital-circular/)
+
 > Imagen generada
 
 ![plantilla corte boca pez](screenshot/plantilla_corte_boca_pez.png)
