@@ -18,6 +18,7 @@ import csv
 import json
 import trimesh
 import numpy as np
+import sys
 
 
 class CorteSagital:
@@ -183,6 +184,9 @@ class CorteSagital:
         # Ángulo en grados → radianes
         # Se el suma 90  porque en el cilindro injerto esta el 90
         angulo_deg = -(self.angulo_inclinacion)
+        if self.angulo_inclinacion == 90:
+            angulo_deg = 0
+
         print(angulo_deg)
         angulo_rad = np.radians(angulo_deg)
         # longitud del cilindro  base
@@ -474,14 +478,25 @@ def main():
     parser = argparse.ArgumentParser(description="Procesar parámetros de dibujo. todo los datos en mm")
     parser.add_argument("-db", "--diametro_base", type=float, required=True, help="Diámetro de la base en mm")
     parser.add_argument("-di", "--diametro_injerto", type=float, required=True, help="Diámetro del injerto en mm")
-    parser.add_argument("-gi", "--grosor_injerto", type=float, required=True, help="Grosor del injerto en mm")
+    parser.add_argument("-gi", "--grosor_injerto", type=float, required=True,
+                        help="Grosor del injerto en mm debe ser mayor que cero ")
     parser.add_argument("-ai", "--angulo_inclinacion", type=float,
-                        required=True, help="Angulo de inclinacion en grados ")
+                        required=True, help="Angulo de inclinacion en grados entre 1 y 90 ")
     parser.add_argument("-nd", "--numero_divisiones", type=int, required=True,
                         help="Número de divisiones, o numero de cordenadas")
     parser.add_argument("-al", "--ancho_linea", type=float, required=True, help="Grosor de la del dibujo, línea en mm")
 
     args = parser.parse_args()
+
+    if not (1 <= int(args.angulo_inclinacion) <= 90):
+        parser.print_help(sys.stderr)
+        print("Angulo de inclinacion en grados entre 1 y 90 ")
+        sys.exit(1)
+
+    if int(args.grosor_injerto) <= 0:
+        parser.print_help(sys.stderr)
+        print("Grosor del injerto en mm debe ser mayor que cero")
+        sys.exit(1)
 
     corte = CorteSagital(args.diametro_base, args.diametro_injerto, args.grosor_injerto,
                          args.numero_divisiones, args.ancho_linea, args.angulo_inclinacion)
