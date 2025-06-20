@@ -191,9 +191,9 @@ class CorteSagital:
         angulo_rad = np.radians(angulo_deg)
         # longitud del cilindro  base
         # la longitud es arbitrario
-        longitud = self.diametro_base*3
+        longitud = self.diametro_base*6
         grosor = self.grosor_base
-        altura = max_axis_z*6
+        altura = (max_axis_z + self.diametro_base)
 
         radio_exterior = self.diametro_base / 2
         radio_interior = radio_exterior - grosor
